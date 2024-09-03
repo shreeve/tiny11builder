@@ -30,7 +30,6 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
 }
 
 # Prepare the window and start logging
-Clear-Host
 $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 # Start-Transcript -Path "$PSScriptRoot\tiny11.log"
 
@@ -69,7 +68,6 @@ Write-Host "Copying Windows image..."
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
-Clear-Host
 Write-Host "Getting image information:"
 &  'dism' '/English' "/Get-WimInfo" "/wimfile:$target\tiny11\sources\install.wim"
 $index = Read-Host "Please enter the image index"
@@ -169,7 +167,6 @@ Write-Host "Removing OneDrive:"
 Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
 Write-Host "Removal complete!"
 Start-Sleep -Seconds 2
-Clear-Host
 Write-Host "Loading registry..."
 reg load HKLM\zCOMPONENTS $target\scratchdir\Windows\System32\config\COMPONENTS > $null
 reg load HKLM\zDEFAULT $target\scratchdir\Windows\System32\config\default > $null
@@ -369,7 +366,6 @@ Remove-Item -Path "$target\tiny11\sources\install.wim" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Write-Host "Windows image completed. Continuing with boot.wim."
 Start-Sleep -Seconds 2
-Clear-Host
 Write-Host "Mounting boot image:"
 $wimFilePath = "$($env:SystemDrive)\tiny11\sources\boot.wim"
 & takeown "/F" $wimFilePath > $null
@@ -406,7 +402,6 @@ reg unload HKLM\zSOFTWARE
 reg unload HKLM\zSYSTEM > $null
 Write-Host "Unmounting image..."
 & 'dism' '/English' '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
-Clear-Host
 Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
 Write-Host "Copying unattended file for bypassing MS account on OOBE..."
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
