@@ -231,7 +231,7 @@ reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"             
 reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableWindowsConsumerFeatures     /t REG_DWORD /d 1 /f > $null
 reg add    "HKLM\zSOFTWARE\Microsoft\PolicyManager\current\device\Start"                   /v ConfigureStartPins                 /t REG_SZ    /d '{"pinnedList": [{}]}' /f > $null
 reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Subscriptions" /f > $null
-reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps" /f > $null
+reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps" /f > $null # NOTE: This is missing?
 
 Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]===================`n"
 
