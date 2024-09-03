@@ -23,8 +23,8 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
 {
     Write-Host "Restarting Tiny11 image creator as admin in a new window, you can close this one."
     $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
-    $newProcess.Arguments = $myInvocation.MyCommand.Definition;
     $newProcess.Verb = "runas";
+    $newProcess.Arguments = $myInvocation.MyCommand.Definition;
     [System.Diagnostics.Process]::Start($newProcess);
     exit
 }
