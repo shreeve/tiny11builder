@@ -37,7 +37,7 @@ $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 Write-Host "`n==[ Tiny11 Image Creator: Release 2024-09-02 ]==`n"
 
 # Determine the source
-$source = Read-Host "Please enter the drive letter for the Windows 11 image"
+$source = Read-Host "Enter the drive letter for the Windows 11 image"
 $source = $source + ":"
 Write-Host
 
@@ -50,7 +50,7 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
         Write-Host "Found install.esd, converting to install.wim..."
         &  'dism' '/English' "/Get-WimInfo" "/wimfile:$source\sources\install.esd"
-        $index = Read-Host "Please enter the image index"
+        $index = Read-Host "Enter the image index"
         Write-Host '`nConverting install.esd to install.wim. This may take a while...'
         & 'DISM' /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$target\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
 
@@ -59,7 +59,7 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
         Remove-Item "$target\tiny11\sources\install.esd" > $null 2>&1
     } else {
         Write-Host "Can't find Windows OS Installation files in the specified Drive Letter.."
-        Write-Host "Please enter the correct DVD Drive Letter.."
+        Write-Host "Enter the correct CD-ROM drive letter (only the letter)"
         exit
     }
 }
