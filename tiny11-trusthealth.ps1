@@ -78,11 +78,7 @@ Write-Host "Mounting Windows image. This may take a while."
 $wimFilePath = "$($env:SystemDrive)\tiny11\sources\install.wim"
 & takeown "/F" $wimFilePath
 & icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
-try {
-    Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction Stop
-} catch {
-    # This block will catch the error and suppress it.
-}
+try { Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
 & dism /English "/mount-image" "/imagefile:$($env:SystemDrive)\tiny11\sources\install.wim" "/index:$index" "/mountdir:$($env:SystemDrive)\scratchdir"
 
