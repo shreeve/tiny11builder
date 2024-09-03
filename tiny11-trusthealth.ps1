@@ -34,6 +34,7 @@ $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 # Start-Transcript -Path "$PSScriptRoot\tiny11.log"
 
 # Let's go...
+Clear-Host
 Write-Host "`n==[ Tiny11 Image Creator: Release 2024-09-02 ]==`n"
 
 # Determine the source
