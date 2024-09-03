@@ -145,6 +145,14 @@ foreach ($package in $packagesToRemove) {
     Write-Host "- $package"
 }
 
+Write-Host "`n==[ Loading registry ]==========================================================`n"
+
+reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS" > $null
+reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"    > $null
+reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"           > $null
+reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"   > $null
+reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"     > $null
+
 Write-Host "`n==[ Removing Edge ]=============================================================`n"
 
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge"       -Recurse -Force > $null
@@ -177,14 +185,6 @@ Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -
 
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"        /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
-
-Write-Host "`n==[ Loading registry ]==========================================================`n"
-
-reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS" > $null
-reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"    > $null
-reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"           > $null
-reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"   > $null
-reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"     > $null
 
 Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
 
