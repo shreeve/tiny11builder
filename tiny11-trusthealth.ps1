@@ -105,16 +105,39 @@ if (-not $architecture) {
     Write-Host "`nArchitecture information not found."
 }
 
-Write-Host "Mounting complete! Performing removal of applications..."
 
-$packages = & 'dism' '/English' "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
-    ForEach-Object {
-        if ($_ -match 'PackageName : (.*)') {
-            $matches[1]
-        }
-    }
-$packagePrefixes = 'Clipchamp.Clipchamp_', 'Microsoft.BingNews_', 'Microsoft.BingWeather_', 'Microsoft.GamingApp_', 'Microsoft.GetHelp_', 'Microsoft.Getstarted_', 'Microsoft.MicrosoftOfficeHub_', 'Microsoft.MicrosoftSolitaireCollection_', 'Microsoft.People_', 'Microsoft.PowerAutomateDesktop_', 'Microsoft.Todos_', 'Microsoft.WindowsAlarms_', 'microsoft.windowscommunicationsapps_', 'Microsoft.WindowsFeedbackHub_', 'Microsoft.WindowsMaps_', 'Microsoft.WindowsSoundRecorder_', 'Microsoft.Xbox.TCUI_', 'Microsoft.XboxGamingOverlay_', 'Microsoft.XboxGameOverlay_', 'Microsoft.XboxSpeechToTextOverlay_', 'Microsoft.YourPhone_', 'Microsoft.ZuneMusic_', 'Microsoft.ZuneVideo_', 'MicrosoftCorporationII.MicrosoftFamily_', 'MicrosoftCorporationII.QuickAssist_', 'MicrosoftTeams_', 'Microsoft.549981C3F5F10_'
-
+# Remove applications
+Write-Host "Removing applications"
+$packages = & dism /English "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
+    ForEach-Object { if ($_ -match 'PackageName : (.*)') { $matches[1] } }
+$packagePrefixes =
+    'Clipchamp.Clipchamp_',
+    'Microsoft.549981C3F5F10_',
+    'Microsoft.BingNews_',
+    'Microsoft.BingWeather_',
+    'Microsoft.GamingApp_',
+    'Microsoft.GetHelp_',
+    'Microsoft.Getstarted_',
+    'Microsoft.MicrosoftOfficeHub_',
+    'Microsoft.MicrosoftSolitaireCollection_',
+    'Microsoft.People_',
+    'Microsoft.PowerAutomateDesktop_',
+    'Microsoft.Todos_',
+    'Microsoft.WindowsAlarms_',
+    'microsoft.windowscommunicationsapps_',
+    'Microsoft.WindowsFeedbackHub_',
+    'Microsoft.WindowsMaps_',
+    'Microsoft.WindowsSoundRecorder_',
+    'Microsoft.Xbox.TCUI_',
+    'Microsoft.XboxGameOverlay_',
+    'Microsoft.XboxGamingOverlay_',
+    'Microsoft.XboxSpeechToTextOverlay_',
+    'Microsoft.YourPhone_',
+    'Microsoft.ZuneMusic_',
+    'Microsoft.ZuneVideo_',
+    'MicrosoftCorporationII.MicrosoftFamily_',
+    'MicrosoftCorporationII.QuickAssist_',
+    'MicrosoftTeams_'
 $packagesToRemove = $packages | Where-Object {
     $packageName = $_
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
