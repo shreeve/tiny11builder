@@ -84,16 +84,6 @@ try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -Erro
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
 dism /English /mount-image "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
 
-$imageIntl = & dism /English /Get-Intl "/Image:$target\scratchdir"
-$languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default system UI language : ([a-zA-Z]{2}-[a-zA-Z]{2})' }
-
-if ($languageLine) {
-    $languageCode = $Matches[1]
-    Write-Host "Default system UI language code: $languageCode"
-} else {
-    Write-Host "Default system UI language code not found."
-}
-
 $imageInfo = & 'dism' '/English' '/Get-WimInfo' "/wimFile:$target\tiny11\sources\install.wim" "/index:$index"
 $lines = $imageInfo -split '\r?\n'
 
