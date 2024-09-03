@@ -84,9 +84,9 @@ try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -Erro
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
 dism /English /mount-image "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
 
-$imageInfo = & 'dism' '/English' '/Get-WimInfo' "/wimFile:$target\tiny11\sources\install.wim" "/index:$index"
+# Determine the architecture
+$imageInfo = dism /English /Get-WimInfo "/wimFile:$target\tiny11\sources\install.wim" "/index:$index"
 $lines = $imageInfo -split '\r?\n'
-
 foreach ($line in $lines) {
     if ($line -like '*Architecture : *') {
         $architecture = $line -replace 'Architecture : ',''
@@ -98,7 +98,6 @@ foreach ($line in $lines) {
         break
     }
 }
-
 if (-not $architecture) {
     Write-Host "Architecture information not found."
 }
