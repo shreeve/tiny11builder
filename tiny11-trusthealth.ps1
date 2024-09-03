@@ -363,6 +363,8 @@ function Enable-Privilege {
 
 Enable-Privilege SeTakeOwnershipPrivilege
 
+Write-Host "`n==[ Updating registry key permissions ]=========================================`n"
+
 $regKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::TakeOwnership)
 $regACL = $regKey.GetAccessControl()
 $regACL.SetOwner($adminGroup)
@@ -375,55 +377,51 @@ $regACL = $regKey.GetAccessControl()
 $regRule = New-Object System.Security.AccessControl.RegistryAccessRule ($adminGroup,"FullControl","ContainerInherit","None","Allow")
 $regACL.SetAccessRule($regRule)
 $regKey.SetAccessControl($regACL)
-Write-Host "Permissions modified for Administrators group"
-Write-Host "Registry key permissions successfully updated"
 $regKey.Close()
+Write-Host "Permissions modified for Administrators group"
 
-Write-Host 'Deleting Application Compatibility Appraiser'
+Write-Host "`n==[ Deleting Application Compatibility Appraiser ]==============================`n"
 
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{0600DD45-FAF2-4131-A006-0B17509B9F78}" /f > $null
 
-Write-Host 'Deleting Customer Experience Improvement Program'
+Write-Host "`n==[ Deleting Customer Experience Improvement Program ]==========================`n"
 
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{4738DE7A-BCC1-4E2D-B1B0-CADB044BFA81}" /f > $null
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{6FAC31FA-4A85-4E64-BFD5-2154FF4594B3}" /f > $null
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{FC931F16-B50A-472E-B061-B6F79A71EF59}" /f > $null
 
-Write-Host 'Deleting Program Data Updater'
+Write-Host "`n==[ Deleting Program Data Updater ]=============================================`n"
 
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{0671EB05-7D95-4153-A32B-1426B9FE61DB}" /f > $null
 
-Write-Host 'Deleting autochk proxy'
+Write-Host "`n==[ Deleting autochk proxy ]====================================================`n"
 
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{87BF85F4-2CE1-4160-96EA-52F554AA28A2}" /f > $null
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{8A9C643C-3D74-4099-B6BD-9C6D170898B1}" /f > $null
 
-Write-Host 'Deleting QueueReporting'
+Write-Host "`n==[ Deleting QueueReporting ]===================================================`n"
 
 reg delete "HKLM\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{E3176A65-4E44-4ED3-AA73-3283660ACB9C}" /f > $null
 
-Write-Host "Tweaking complete!"
+Write-Host "`n==[ Done tweaking! ]============================================================`n"
 
-# Write-Host "Unmounting Registry..."
+Write-Host "`n==[ Unloading registry ]========================================================`n"
 
-reg unload HKLM\zCOMPONENTS > $null
-reg unload HKLM\zDEFAULT    > $null
-reg unload HKLM\zDRIVERS    > $null
-reg unload HKLM\zNTUSER     > $null
-reg unload HKLM\zSCHEMA     > $null
-reg unload HKLM\zSOFTWARE   > $null
-reg unload HKLM\zSYSTEM     > $null
+  reg unload "HKLM\zCOMPONENTS" > $null
+  reg unload "HKLM\zDEFAULT"    > $null
+# reg unload "HKLM\zDRIVERS"    > $null
+  reg unload "HKLM\zNTUSER"     > $null
+# reg unload "HKLM\zSCHEMA"     > $null
+  reg unload "HKLM\zSOFTWARE"   > $null
+  reg unload "HKLM\zSYSTEM"     > $null
 
-Write-Host "Cleaning up image..."
-& dism /English "/image:$target\scratchdir" '/Cleanup-Image' '/StartComponentCleanup' '/ResetBase' > $null
-Write-Host "Cleanup complete."
-Write-Host ' '
+Write-Host "`n==[ Cleaning up image ]=========================================================`n"
 
-Write-Host "Unmounting image..."
-& dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+dism /English "/image:$target\scratchdir" /Cleanup-Image /StartComponentCleanup /ResetBase > $null
+dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit # NOTE: /discard if you want to ignore your work
 
 Write-Host "Exporting image..."
-& dism /English '/Export-Image' "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
+dism /English /Export-Image "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" /compress:recovery # Creates 'install.esd' if recovery!
 Remove-Item -Path "$wimFilePath" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Write-Host "Windows image completed. Continuing with boot.wim."
@@ -431,10 +429,11 @@ Start-Sleep -Seconds 2
 
 Write-Host "Mounting boot image:"
 $wimFilePath = "$target\tiny11\sources\boot.wim"
-& takeown "/F" $wimFilePath > $null
-& icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
-Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false
-& dism /English '/mount-image' "/imagefile:$target\tiny11\sources\boot.wim" '/index:2' "/mountdir:$target\scratchdir"
+takeown /F "$wimFilePath" > $null
+icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
+Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false
+dism /English /Mount-Image "/imagefile:$target\tiny11\sources\boot.wim" /index:2 "/mountdir:$target\scratchdir"
+
 Write-Host "Loading registry..."
 
 reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS"
@@ -445,36 +444,36 @@ reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"
 
 Write-Host "Bypassing system requirements(on the setup image):"
 
-reg 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-reg 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-reg 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-reg 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassCPUCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassRAMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassSecureBootCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassStorageCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassTPMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-reg 'HKLM\zSYSTEM\Setup\MoSetup' '/v' 'AllowUpgradesWithUnsupportedTPMOrCPU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassCPUCheck                       /t REG_DWORD /d 1 /f > $null
+reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassRAMCheck                       /t REG_DWORD /d 1 /f > $null
+reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassSecureBootCheck                /t REG_DWORD /d 1 /f > $null
+reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
+reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
+reg "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
 
 Write-Host "Tweaking complete!"
 
 Write-Host "Unmounting Registry..."
-$regKey.Close()
 
-reg unload HKLM\zCOMPONENTS > $null
-reg unload HKLM\zDRIVERS    > $null
-reg unload HKLM\zDEFAULT    > $null
-reg unload HKLM\zNTUSER     > $null
-reg unload HKLM\zSCHEMA     > $null
+$regKey.Close() # Why this???
 
-$regKey.Close()
+reg unload "HKLM\zCOMPONENTS" > $null
+reg unload "HKLM\zDRIVERS"    > $null
+reg unload "HKLM\zDEFAULT"    > $null
+reg unload "HKLM\zNTUSER"     > $null
+reg unload "HKLM\zSCHEMA"     > $null
+reg unload "HKLM\zSOFTWARE"   > $null
+reg unload "HKLM\zSYSTEM"     > $null
 
-reg unload HKLM\zSOFTWARE
-reg unload HKLM\zSYSTEM     > $null
+$regKey.Close() # Why this???
 
 Write-Host "Unmounting image..."
 
-& dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit
 
 Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
 Write-Host "Copying unattended file for bypassing MS account on OOBE..."
@@ -511,14 +510,15 @@ if ([System.IO.Directory]::Exists($ADKDepTools)) {
     $OSCDIMG = $localOSCDIMGPath
 }
 
-& "$OSCDIMG" '-m' '-o' '-u2' '-udfver102' "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
+& "$OSCDIMG" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
 
-# Finishing up
+# Finishing up (directories will exist until user presses Enter)
 Write-Host "Creation completed! Press any key to exit the script..."
 Read-Host "Press Enter to continue"
+
 Write-Host "Performing Cleanup..."
-Remove-Item -Path "$target\tiny11" -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir" -Recurse -Force > $null
+Remove-Item -Path "$target\tiny11"     -Recurse -Force > $null
 
 # Stop the transcript
 try { Stop-Transcript } catch { }
