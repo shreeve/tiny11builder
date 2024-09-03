@@ -235,12 +235,12 @@ reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDelive
 
 Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]===================`n"
 
-reg 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'BypassNRO' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg add "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f > $null
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\scratchdir\Windows\System32\Sysprep\autounattend.xml" -Force > $null
 
 Write-Host "`n==[ Disabling reserved storage ]================================================`n"
 
-reg 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' '/v' 'ShippedWithReserves' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg add "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager" /v ShippedWithReserves /t REG_DWORD /d 0 /f > $null
 
 Write-Host "`n==[ Disabling chat icon ]=======================================================`n"
 
