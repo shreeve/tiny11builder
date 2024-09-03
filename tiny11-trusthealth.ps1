@@ -36,7 +36,6 @@ $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 Clear-Host
 Write-Host "Welcome to the tiny11 image creator! Release: 05-06-24"
 
-$hostArchitecture = $Env:PROCESSOR_ARCHITECTURE
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
 $source = $source + ":"
@@ -408,7 +407,7 @@ Write-Host "The tiny11 image is now completed. Proceeding with the making of the
 Write-Host "Copying unattended file for bypassing MS account on OOBE..."
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force >null
 Write-Host "Creating ISO image..."
-$ADKDepTools = "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\$hostarchitecture\Oscdimg"
+$ADKDepTools = "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\$env:PROCESSOR_ARCHITECTURE\Oscdimg"
 $localOSCDIMGPath = "$PSScriptRoot\oscdimg.exe"
 
 if ([System.IO.Directory]::Exists($ADKDepTools)) {
