@@ -35,7 +35,7 @@ $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 
 # Let's go...
 Clear-Host
-Write-Host "`n==[ Tiny11 Image Creator: Release 2024-09-02 ]==`n"
+Write-Host "`n==[ Tiny11 Image Creator: Release 2024-09-02 ]==================================`n"
 
 # Determine the source
 $source = Read-Host "Enter the drive letter for the Windows 11 image"
@@ -67,13 +67,13 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
 }
 
 # Copy all source files to the target, set the WIM file path
-Write-Host "Copying Windows image..."
+Write-Host "Copying Windows image"
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 
 # Show the image info and ask the user to pick the desired index
-Write-Host "`nGetting image information:"
+Write-Host "`nGetting image information"
 dism /English /Get-WimInfo "/wimfile:$wimFilePath"
 $index = Read-Host "`nEnter the image index"
 
@@ -106,7 +106,7 @@ if (-not $architecture) {
 }
 
 # Remove applications
-Write-Host "Removing applications"
+Write-Host "`n==[ Removing applications ]====================================================="
 $packages = & dism /English "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
     ForEach-Object { if ($_ -match 'PackageName : (.*)') { $matches[1] } }
 $packagePrefixes =
@@ -142,11 +142,12 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
+    Write-Host "`nRemoving: $package"
     & dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package"
 }
 
+Write-Host "`n==[ Removing Edge ]============================================================="
 
-Write-Host "Removing Edge:"
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge" -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeCore" -Recurse -Force > $null
@@ -176,83 +177,97 @@ if ($architecture -eq 'amd64') {
 & 'takeown' '/f' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null
 & 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force > $null
-Write-Host "Removing OneDrive:"
+
+Write-Host "`n==[ Removing OneDrive ]========================================================="
+
 & 'takeown' '/f' "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
 & 'icacls' "$target\scratchdir\Windows\System32\OneDriveSetup.exe" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
 Write-Host "Removal complete!"
 Start-Sleep -Seconds 2
-Write-Host "Loading registry..."
-reg load HKLM\zCOMPONENTS $target\scratchdir\Windows\System32\config\COMPONENTS > $null
-reg load HKLM\zDEFAULT $target\scratchdir\Windows\System32\config\default > $null
-reg load HKLM\zNTUSER $target\scratchdir\Users\Default\ntuser.dat > $null
-reg load HKLM\zSOFTWARE $target\scratchdir\Windows\System32\config\SOFTWARE > $null
-reg load HKLM\zSYSTEM $target\scratchdir\Windows\System32\config\SYSTEM > $null
-Write-Host "Bypassing system requirements(on the system image):"
-& 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassCPUCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassRAMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassSecureBootCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassStorageCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassTPMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\MoSetup' '/v' 'AllowUpgradesWithUnsupportedTPMOrCPU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-Write-Host "Disabling Sponsored Apps:"
-& 'reg' 'add' 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'OemPreInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'PreInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SilentInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent' '/v' 'DisableWindowsConsumerFeatures' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'ContentDeliveryAllowed' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\PolicyManager\current\device\Start' '/v' 'ConfigureStartPins' '/t' 'REG_SZ' '/d' '{"pinnedList": [{}]}' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'ContentDeliveryAllowed' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'ContentDeliveryAllowed' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'FeatureManagementEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'OemPreInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'PreInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'PreInstalledAppsEverEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SilentInstalledAppsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SoftLandingEnabled' '/t' 'REG_DWORD' '/d' '0' '/f'> $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContentEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-310093Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-338388Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-338389Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-338393Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-353694Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContent-353696Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SubscribedContentEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager' '/v' 'SystemPaneSuggestionsEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\PushToInstall' '/v' 'DisablePushToInstall' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\MRT' '/v' 'DontOfferThroughWUAU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'delete' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Subscriptions' '/f' > $null
-& 'reg' 'delete' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent' '/v' 'DisableConsumerAccountStateContent' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent' '/v' 'DisableCloudOptimizedContent' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-Write-Host "Enabling Local Accounts on OOBE:"
+
+Write-Host "`n==[ Loading registry ]=========================================================="
+
+reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS" > $null
+reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"    > $null
+reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"           > $null
+reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"   > $null
+reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"     > $null
+
+Write-Host "`n==[ Bypassing system requirements (in the system image) ]======================="
+
+reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassCPUCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassRAMCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassSecureBootCheck                /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
+
+Write-Host "`n==[ Disabling sponsored applications ]=========================================="
+
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v ContentDeliveryAllowed             /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v FeatureManagementEnabled           /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v OemPreInstalledAppsEnabled         /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEnabled            /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEverEnabled        /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SilentInstalledAppsEnabled         /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SoftLandingEnabled                 /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-310093Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338388Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338389Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338393Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353694Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353696Enabled    /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContentEnabled           /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SystemPaneSuggestionsEnabled       /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\MRT"                                         /v DontOfferThroughWUAU               /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\PushToInstall"                               /v DisablePushToInstall               /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableCloudOptimizedContent       /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableConsumerAccountStateContent /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableWindowsConsumerFeatures     /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zSOFTWARE\Microsoft\PolicyManager\current\device\Start"                   /v ConfigureStartPins                 /t REG_SZ    /d '{"pinnedList": [{}]}' /f > $null
+reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Subscriptions" /f > $null
+reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps" /f > $null
+
+Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]==================="
+
 & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'BypassNRO' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\scratchdir\Windows\System32\Sysprep\autounattend.xml" -Force > $null
-Write-Host "Disabling Reserved Storage:"
+
+Write-Host "`n==[ Disabling reserved storage ]================================================"
+
 & 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' '/v' 'ShippedWithReserves' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-Write-Host "Disabling Chat icon:"
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat' '/v' 'ChatIcon' '/t' 'REG_DWORD' '/d' '3' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced' '/v' 'TaskbarMn' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+
+Write-Host "`n==[ Disabling chat icon ]======================================================="
+
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat"                   /v ChatIcon  /t REG_DWORD /d 3 /f > $null
+reg add "HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarMn /t REG_DWORD /d 0 /f > $null
+
 Write-Host "Removing Edge related registries"
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge" /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
+
 Write-Host "Disabling OneDrive folder backup"
+
 & 'reg' 'add' "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" '/v' 'DisableFileSyncNGSC' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+
 Write-Host "Disabling Telemetry:"
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy' '/v' 'TailoredExperiencesWithDiagnosticDataEnabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy' '/v' 'HasAccepted' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Input\TIPC' '/v' 'Enabled' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitInkCollection' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization' '/v' 'RestrictImplicitTextCollection' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\InputPersonalization\TrainedDataStore' '/v' 'HarvestContacts' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Software\Microsoft\Personalization\Settings' '/v' 'AcceptedPrivacyPolicy' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSOFTWARE\Policies\Microsoft\Windows\DataCollection' '/v' 'AllowTelemetry' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\ControlSet001\Services\dmwappushservice' '/v' 'Start' '/t' 'REG_DWORD' '/d' '4' '/f' > $null
+
+reg add "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"      /v Enabled                                      /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy"              /v TailoredExperiencesWithDiagnosticDataEnabled /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\Speech_OneCore\Settings\OnlineSpeechPrivacy" /v HasAccepted                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\Input\TIPC"                                  /v Enabled                                      /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\InputPersonalization"                        /v RestrictImplicitInkCollection                /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\InputPersonalization"                        /v RestrictImplicitTextCollection               /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\InputPersonalization\TrainedDataStore"       /v HarvestContacts                              /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Software\Microsoft\Personalization\Settings"                    /v AcceptedPrivacyPolicy                        /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\DataCollection"                    /v AllowTelemetry                               /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zSYSTEM\ControlSet001\Services\dmwappushservice"                        /v Start                                        /t REG_DWORD /d 4 /f > $null
 
 # Take ownership of the Scheduled Task's registry keys from TrustedInstaller (Based on Jose Espitia's script)
 function Enable-Privilege {
