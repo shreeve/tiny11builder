@@ -29,12 +29,13 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
     exit
 }
 
-# Start the transcript and prepare the window
-Start-Transcript -Path "$PSScriptRoot\tiny11.log"
-
-$Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
+# Prepare the window and start logging
 Clear-Host
-Write-Host "Welcome to the tiny11 image creator! Release: 05-06-24"
+# Start-Transcript -Path "$PSScriptRoot\tiny11.log"
+$Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
+Write-Host
+Write-Host "==[ Tiny11 Image Creator: Release 2024-09-02 ]=="
+Write-Host
 
 # Determine the source
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
