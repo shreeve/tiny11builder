@@ -58,7 +58,7 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
         Set-ItemProperty -Path "$target\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
         Remove-Item "$target\tiny11\sources\install.esd" > $null 2>&1
     } else {
-        Write-Host "Can't find Windows OS Installation files in the specified Drive Letter.."
+        Write-Host "Can't find Windows installation files at that drive letter"
         Write-Host "Enter the correct CD-ROM drive letter (only the letter)"
         exit
     }
