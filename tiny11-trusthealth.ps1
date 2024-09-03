@@ -437,11 +437,11 @@ Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false
 & dism /English '/mount-image' "/imagefile:$target\tiny11\sources\boot.wim" '/index:2' "/mountdir:$target\scratchdir"
 Write-Host "Loading registry..."
 
-reg load HKLM\zCOMPONENTS $target\scratchdir\Windows\System32\config\COMPONENTS
-reg load HKLM\zDEFAULT $target\scratchdir\Windows\System32\config\default
-reg load HKLM\zNTUSER $target\scratchdir\Users\Default\ntuser.dat
-reg load HKLM\zSOFTWARE $target\scratchdir\Windows\System32\config\SOFTWARE
-reg load HKLM\zSYSTEM $target\scratchdir\Windows\System32\config\SYSTEM
+reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS"
+reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"
+reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"
+reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"
+reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"
 
 Write-Host "Bypassing system requirements(on the setup image):"
 
