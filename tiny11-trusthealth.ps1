@@ -105,7 +105,6 @@ if (-not $architecture) {
     Write-Host "`nArchitecture information not found."
 }
 
-
 # Remove applications
 Write-Host "Removing applications"
 $packages = & dism /English "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
