@@ -36,7 +36,6 @@ $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
 Clear-Host
 Write-Host "Welcome to the tiny11 image creator! Release: 05-06-24"
 
-New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
 # Determine the source
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
 $source = $source + ":"
