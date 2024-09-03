@@ -178,14 +178,6 @@ Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"        /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
 
-Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
-
-& takeown      /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
-& icacls          "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
-Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
-
-reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f > $null
-
 Write-Host "`n==[ Loading registry ]==========================================================`n"
 
 reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS" > $null
@@ -193,6 +185,14 @@ reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"
 reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"           > $null
 reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"   > $null
 reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"     > $null
+
+Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
+
+& takeown      /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
+& icacls          "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
+Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
+
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f > $null
 
 Write-Host "`n==[ Bypassing system requirements (in the system image) ]=======================`n"
 
