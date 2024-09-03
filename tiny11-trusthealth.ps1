@@ -178,6 +178,11 @@ if ($architecture -eq 'amd64') {
 & 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force > $null
 
+# # Nuke our work
+# dism /English /unmount-image "/mountdir:c:\scratchdir" /discard
+# Remove-Item -Path "C:\scratchdir" -Recurse -Force
+# Remove-Item -Path "C:\tiny11" -Recurse -Force
+
 Write-Host "`n==[ Removing OneDrive ]========================================================="
 
 & 'takeown' '/f' "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
@@ -370,31 +375,44 @@ $regACL = $regKey.GetAccessControl()
 $regACL.SetOwner($adminGroup)
 $regKey.SetAccessControl($regACL)
 $regKey.Close()
-Write-Host "Owner changed to Administrators."
+Write-Host "Owner changed to Administrators"
+
 $regKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::ChangePermissions)
 $regACL = $regKey.GetAccessControl()
 $regRule = New-Object System.Security.AccessControl.RegistryAccessRule ($adminGroup,"FullControl","ContainerInherit","None","Allow")
 $regACL.SetAccessRule($regRule)
 $regKey.SetAccessControl($regACL)
-Write-Host "Permissions modified for Administrators group."
-Write-Host "Registry key permissions successfully updated."
+Write-Host "Permissions modified for Administrators group"
+Write-Host "Registry key permissions successfully updated"
 $regKey.Close()
 
 Write-Host 'Deleting Application Compatibility Appraiser'
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{0600DD45-FAF2-4131-A006-0B17509B9F78}" /f > $null
+
 Write-Host 'Deleting Customer Experience Improvement Program'
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{4738DE7A-BCC1-4E2D-B1B0-CADB044BFA81}" /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{6FAC31FA-4A85-4E64-BFD5-2154FF4594B3}" /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{FC931F16-B50A-472E-B061-B6F79A71EF59}" /f > $null
+
 Write-Host 'Deleting Program Data Updater'
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{0671EB05-7D95-4153-A32B-1426B9FE61DB}" /f > $null
+
 Write-Host 'Deleting autochk proxy'
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{87BF85F4-2CE1-4160-96EA-52F554AA28A2}" /f > $null
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{8A9C643C-3D74-4099-B6BD-9C6D170898B1}" /f > $null
+
 Write-Host 'Deleting QueueReporting'
+
 reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks\{E3176A65-4E44-4ED3-AA73-3283660ACB9C}" /f > $null
+
 Write-Host "Tweaking complete!"
+
 Write-Host "Unmounting Registry..."
+
 $regKey.Close()
 reg unload HKLM\zCOMPONENTS > $null
 reg unload HKLM\zDRIVERS > $null
@@ -403,18 +421,22 @@ reg unload HKLM\zNTUSER > $null
 reg unload HKLM\zSCHEMA > $null
 reg unload HKLM\zSOFTWARE
 reg unload HKLM\zSYSTEM > $null
+
 Write-Host "Cleaning up image..."
 & dism /English "/image:$target\scratchdir" '/Cleanup-Image' '/StartComponentCleanup' '/ResetBase' > $null
 Write-Host "Cleanup complete."
 Write-Host ' '
+
 Write-Host "Unmounting image..."
 & dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+
 Write-Host "Exporting image..."
 & dism /English '/Export-Image' "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
 Remove-Item -Path "$wimFilePath" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Write-Host "Windows image completed. Continuing with boot.wim."
 Start-Sleep -Seconds 2
+
 Write-Host "Mounting boot image:"
 $wimFilePath = "$target\tiny11\sources\boot.wim"
 & takeown "/F" $wimFilePath > $null
@@ -422,12 +444,15 @@ $wimFilePath = "$target\tiny11\sources\boot.wim"
 Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false
 & dism /English '/mount-image' "/imagefile:$target\tiny11\sources\boot.wim" '/index:2' "/mountdir:$target\scratchdir"
 Write-Host "Loading registry..."
+
 reg load HKLM\zCOMPONENTS $target\scratchdir\Windows\System32\config\COMPONENTS
 reg load HKLM\zDEFAULT $target\scratchdir\Windows\System32\config\default
 reg load HKLM\zNTUSER $target\scratchdir\Users\Default\ntuser.dat
 reg load HKLM\zSOFTWARE $target\scratchdir\Windows\System32\config\SOFTWARE
 reg load HKLM\zSYSTEM $target\scratchdir\Windows\System32\config\SYSTEM
+
 Write-Host "Bypassing system requirements(on the setup image):"
+
 & 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
 & 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
 & 'reg' 'add' 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
@@ -438,23 +463,34 @@ Write-Host "Bypassing system requirements(on the setup image):"
 & 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassStorageCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
 & 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassTPMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
 & 'reg' 'add' 'HKLM\zSYSTEM\Setup\MoSetup' '/v' 'AllowUpgradesWithUnsupportedTPMOrCPU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+
 Write-Host "Tweaking complete!"
+
 Write-Host "Unmounting Registry..."
 $regKey.Close()
+
 reg unload HKLM\zCOMPONENTS > $null
 reg unload HKLM\zDRIVERS > $null
 reg unload HKLM\zDEFAULT > $null
 reg unload HKLM\zNTUSER > $null
 reg unload HKLM\zSCHEMA > $null
+
 $regKey.Close()
+
 reg unload HKLM\zSOFTWARE
 reg unload HKLM\zSYSTEM > $null
+
 Write-Host "Unmounting image..."
+
 & dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+
 Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
 Write-Host "Copying unattended file for bypassing MS account on OOBE..."
+
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
+
 Write-Host "Creating ISO image..."
+
 $ADKDepTools = "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\$env:PROCESSOR_ARCHITECTURE\Oscdimg"
 $localOSCDIMGPath = "$PSScriptRoot\oscdimg.exe"
 
@@ -494,5 +530,3 @@ Remove-Item -Path "$target\scratchdir" -Recurse -Force > $null
 
 # Stop the transcript
 try { Stop-Transcript } catch { }
-
-exit
