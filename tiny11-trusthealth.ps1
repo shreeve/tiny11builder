@@ -19,7 +19,7 @@ $adminGroup = $adminSID.Translate([System.Security.Principal.NTAccount])
 $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
 $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
 $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
-if (! $myWindowsPrincipal.IsInRole($adminRole))
+if (!$myWindowsPrincipal.IsInRole($adminRole))
 {
     Write-Host "Restarting Tiny11 image creator as admin in a new window, you can close this one."
     $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
