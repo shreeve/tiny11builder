@@ -42,9 +42,10 @@ $source = Read-Host "Enter the drive letter for the Windows 11 image"
 $source = $source + ":"
 Write-Host
 
-# Determine the target
+# Determine the target and the WIM file path
 $target = $env:SystemDrive
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" > $null
+$wimFilePath = "$target\tiny11\sources\install.wim"
 
 # If needed, extract the WIM file from the highly compressed ESD file
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
@@ -68,7 +69,6 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
 # Copy all source files to the target, set the WIM file path
 Write-Host "Copying Windows image..."
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
-$wimFilePath = "$target\tiny11\sources\install.wim"
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 
