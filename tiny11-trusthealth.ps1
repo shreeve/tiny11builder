@@ -31,15 +31,16 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
 
 # Prepare the window and start logging
 Clear-Host
-# Start-Transcript -Path "$PSScriptRoot\tiny11.log"
 $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
-Write-Host
-Write-Host "==[ Tiny11 Image Creator: Release 2024-09-02 ]=="
-Write-Host
+# Start-Transcript -Path "$PSScriptRoot\tiny11.log"
+
+# Let's go...
+Write-Host "`n==[ Tiny11 Image Creator: Release 2024-09-02 ]==`n"
 
 # Determine the source
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
 $source = $source + ":"
+Write-Host
 
 # Determine the target
 $target = $env:SystemDrive
