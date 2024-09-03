@@ -75,14 +75,14 @@ Write-Host "Getting image information:"
 &  'dism' '/English' "/Get-WimInfo" "/wimfile:$target\tiny11\sources\install.wim"
 $index = Read-Host "`nPlease enter the image index"
 Write-Host "Mounting Windows image. This may take a while."
-$wimFilePath = "$($env:SystemDrive)\tiny11\sources\install.wim"
+$wimFilePath = "$target\tiny11\sources\install.wim"
 & takeown "/F" $wimFilePath
 & icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
 try { Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
-& dism /English "/mount-image" "/imagefile:$($env:SystemDrive)\tiny11\sources\install.wim" "/index:$index" "/mountdir:$($env:SystemDrive)\scratchdir"
 
-$imageIntl = & dism /English /Get-Intl "/Image:$($env:SystemDrive)\scratchdir"
+& dism /English "/mount-image" "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
+$imageIntl = & dism /English /Get-Intl "/Image:$target\scratchdir"
 $languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default system UI language : ([a-zA-Z]{2}-[a-zA-Z]{2})' }
 
 if ($languageLine) {
@@ -92,7 +92,7 @@ if ($languageLine) {
     Write-Host "Default system UI language code not found."
 }
 
-$imageInfo = & 'dism' '/English' '/Get-WimInfo' "/wimFile:$($env:SystemDrive)\tiny11\sources\install.wim" "/index:$index"
+$imageInfo = & 'dism' '/English' '/Get-WimInfo' "/wimFile:$target\tiny11\sources\install.wim" "/index:$index"
 $lines = $imageInfo -split '\r?\n'
 
 foreach ($line in $lines) {
@@ -113,7 +113,7 @@ if (-not $architecture) {
 
 Write-Host "Mounting complete! Performing removal of applications..."
 
-$packages = & 'dism' '/English' "/image:$($env:SystemDrive)\scratchdir" '/Get-ProvisionedAppxPackages' |
+$packages = & 'dism' '/English' "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
     ForEach-Object {
         if ($_ -match 'PackageName : (.*)') {
             $matches[1]
@@ -126,7 +126,7 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    & 'dism' '/English' "/image:$($env:SystemDrive)\scratchdir" '/Remove-ProvisionedAppxPackage' "/PackageName:$package"
+    & 'dism' '/English' "/image:$target\scratchdir" '/Remove-ProvisionedAppxPackage' "/PackageName:$package"
 }
 
 
@@ -366,7 +366,7 @@ Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" >
 Write-Host "Windows image completed. Continuing with boot.wim."
 Start-Sleep -Seconds 2
 Write-Host "Mounting boot image:"
-$wimFilePath = "$($env:SystemDrive)\tiny11\sources\boot.wim"
+$wimFilePath = "$target\tiny11\sources\boot.wim"
 & takeown "/F" $wimFilePath > $null
 & icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
 Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false
