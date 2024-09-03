@@ -247,9 +247,7 @@ Write-Host "`n==[ Disabling chat icon ]=========================================
 reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat"                   /v ChatIcon  /t REG_DWORD /d 3 /f > $null
 reg add "HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarMn /t REG_DWORD /d 0 /f > $null
 
-Write-Host "`n==[ Disabling chat icon ]=======================================================`n"
-
-Write-Host "Disabling Telemetry:"
+Write-Host "`n==[ Disabling telemetry ]=====================================================`n"
 
 reg add "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"      /v Enabled                                      /t REG_DWORD /d 0 /f > $null
 reg add "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\Privacy"              /v TailoredExperiencesWithDiagnosticDataEnabled /t REG_DWORD /d 0 /f > $null
