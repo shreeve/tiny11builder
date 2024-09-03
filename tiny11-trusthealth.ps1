@@ -69,7 +69,6 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
 # Copy all source files to the target, set the WIM file path
 Write-Host "Copying Windows image"
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
-Write-Host "Done"
 Start-Sleep -Seconds 2
 
 # Show the image info and ask the user to pick the desired index
@@ -106,7 +105,7 @@ if (-not $architecture) {
 }
 
 # Remove applications
-Write-Host "`n==[ Removing applications ]====================================================="
+Write-Host "`n==[ Removing applications ]=====================================================`n"
 $packages = & dism /English "/image:$target\scratchdir" '/Get-ProvisionedAppxPackages' |
     ForEach-Object { if ($_ -match 'PackageName : (.*)') { $matches[1] } }
 $packagePrefixes =
@@ -142,11 +141,11 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    Write-Host "Removing: $package"
     dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package" /Quiet
+    Write-Host "- $package"
 }
 
-Write-Host "`n==[ Removing Edge ]============================================================="
+Write-Host "`n==[ Removing Edge ]=============================================================`n"
 
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge"       -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force > $null
@@ -154,35 +153,40 @@ Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeCore"   
 if ($architecture -eq 'amd64') {
     $folderPath = Get-ChildItem -Path "$target\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
     if ($folderPath) {
-        & 'takeown' '/f' $folderPath '/r' > $null
-        & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null
-        Remove-Item -Path $folderPath -Recurse -Force > $null
+        & takeown /f "$folderPath" /r > $null
+        & icacls "$folderPath" /grant "$($adminGroup.Value):(F)" /T /C > $null
+        Remove-Item -Path "$folderPath" -Recurse -Force > $null
     } else {
         Write-Host "Folder not found."
     }
 } elseif ($architecture -eq 'arm64') {
     $folderPath = Get-ChildItem -Path "$target\scratchdir\Windows\WinSxS" -Filter "arm64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName > $null
     if ($folderPath) {
-        & 'takeown' '/f' $folderPath '/r'> $null
-        & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null
-        Remove-Item -Path $folderPath -Recurse -Force > $null
+        & takeown /f "$folderPath" /r > $null
+        & icacls "$folderPath" /grant "$($adminGroup.Value):(F)" /T /C > $null
+        Remove-Item -Path "$folderPath" -Recurse -Force > $null
     } else {
         Write-Host "Folder not found."
     }
 } else {
     Write-Host "Unknown architecture: $architecture"
 }
-& 'takeown' '/f' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null
-& 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null
+& takeown /f "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null
+& 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" /T /C > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force > $null
 
-Write-Host "`n==[ Removing OneDrive ]========================================================="
+reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"        /f > $null
+reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
+
+Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
 
 & takeown      /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
 & icacls          "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
 
-Write-Host "`n==[ Loading registry ]=========================================================="
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f > $null
+
+Write-Host "`n==[ Loading registry ]==========================================================`n"
 
 reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS" > $null
 reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"    > $null
@@ -190,7 +194,7 @@ reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"       
 reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"   > $null
 reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"     > $null
 
-Write-Host "`n==[ Bypassing system requirements (in the system image) ]======================="
+Write-Host "`n==[ Bypassing system requirements (in the system image) ]=======================`n"
 
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
@@ -203,7 +207,7 @@ reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v By
 reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
 reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
 
-Write-Host "`n==[ Disabling sponsored applications ]=========================================="
+Write-Host "`n==[ Disabling sponsored applications ]==========================================`n"
 
 reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v ContentDeliveryAllowed             /t REG_DWORD /d 0 /f > $null
 reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v FeatureManagementEnabled           /t REG_DWORD /d 0 /f > $null
@@ -229,28 +233,21 @@ reg add    "HKLM\zSOFTWARE\Microsoft\PolicyManager\current\device\Start"        
 reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Subscriptions" /f > $null
 reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps" /f > $null
 
-Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]==================="
+Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]===================`n"
 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'BypassNRO' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE' '/v' 'BypassNRO' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\scratchdir\Windows\System32\Sysprep\autounattend.xml" -Force > $null
 
-Write-Host "`n==[ Disabling reserved storage ]================================================"
+Write-Host "`n==[ Disabling reserved storage ]================================================`n"
 
-& 'reg' 'add' 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' '/v' 'ShippedWithReserves' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg 'HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager' '/v' 'ShippedWithReserves' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
 
-Write-Host "`n==[ Disabling chat icon ]======================================================="
+Write-Host "`n==[ Disabling chat icon ]=======================================================`n"
 
 reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat"                   /v ChatIcon  /t REG_DWORD /d 3 /f > $null
 reg add "HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarMn /t REG_DWORD /d 0 /f > $null
 
-Write-Host "Removing Edge related registries"
-
-reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge" /f > $null
-reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
-
-Write-Host "Disabling OneDrive folder backup"
-
-& 'reg' 'add' "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" '/v' 'DisableFileSyncNGSC' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+Write-Host "`n==[ Disabling chat icon ]=======================================================`n"
 
 Write-Host "Disabling Telemetry:"
 
@@ -402,16 +399,15 @@ reg delete "HKEY_LOCAL_MACHINE\zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Sch
 
 Write-Host "Tweaking complete!"
 
-Write-Host "Unmounting Registry..."
+# Write-Host "Unmounting Registry..."
 
-$regKey.Close()
 reg unload HKLM\zCOMPONENTS > $null
-reg unload HKLM\zDRIVERS > $null
-reg unload HKLM\zDEFAULT > $null
-reg unload HKLM\zNTUSER > $null
-reg unload HKLM\zSCHEMA > $null
-reg unload HKLM\zSOFTWARE
-reg unload HKLM\zSYSTEM > $null
+reg unload HKLM\zDEFAULT    > $null
+reg unload HKLM\zDRIVERS    > $null
+reg unload HKLM\zNTUSER     > $null
+reg unload HKLM\zSCHEMA     > $null
+reg unload HKLM\zSOFTWARE   > $null
+reg unload HKLM\zSYSTEM     > $null
 
 Write-Host "Cleaning up image..."
 & dism /English "/image:$target\scratchdir" '/Cleanup-Image' '/StartComponentCleanup' '/ResetBase' > $null
@@ -444,16 +440,16 @@ reg load HKLM\zSYSTEM $target\scratchdir\Windows\System32\config\SYSTEM
 
 Write-Host "Bypassing system requirements(on the setup image):"
 
-& 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassCPUCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassRAMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassSecureBootCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassStorageCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassTPMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
-& 'reg' 'add' 'HKLM\zSYSTEM\Setup\MoSetup' '/v' 'AllowUpgradesWithUnsupportedTPMOrCPU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg 'HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV1' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg 'HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache' '/v' 'SV2' '/t' 'REG_DWORD' '/d' '0' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassCPUCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassRAMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassSecureBootCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassStorageCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\LabConfig' '/v' 'BypassTPMCheck' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
+reg 'HKLM\zSYSTEM\Setup\MoSetup' '/v' 'AllowUpgradesWithUnsupportedTPMOrCPU' '/t' 'REG_DWORD' '/d' '1' '/f' > $null
 
 Write-Host "Tweaking complete!"
 
@@ -461,15 +457,15 @@ Write-Host "Unmounting Registry..."
 $regKey.Close()
 
 reg unload HKLM\zCOMPONENTS > $null
-reg unload HKLM\zDRIVERS > $null
-reg unload HKLM\zDEFAULT > $null
-reg unload HKLM\zNTUSER > $null
-reg unload HKLM\zSCHEMA > $null
+reg unload HKLM\zDRIVERS    > $null
+reg unload HKLM\zDEFAULT    > $null
+reg unload HKLM\zNTUSER     > $null
+reg unload HKLM\zSCHEMA     > $null
 
 $regKey.Close()
 
 reg unload HKLM\zSOFTWARE
-reg unload HKLM\zSYSTEM > $null
+reg unload HKLM\zSYSTEM     > $null
 
 Write-Host "Unmounting image..."
 
