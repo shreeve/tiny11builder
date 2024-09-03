@@ -188,8 +188,15 @@ reg delete "HKLM\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstal
 
 Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
 
-& takeown      /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
-& icacls          "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
+takeown /f "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /R /D Y > $null
+icacls     "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /grant "$($adminGroup.Value):(F)" /T
+
+takeown /f "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /R /D Y > $null
+icacls     "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /grant "$($adminGroup.Value):(F)" /T
+
+takeown /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
+icacls     "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
+
 Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
 
 reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\OneDrive" /v DisableFileSyncNGSC /t REG_DWORD /d 1 /f > $null
