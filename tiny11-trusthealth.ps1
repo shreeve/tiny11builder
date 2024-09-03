@@ -65,28 +65,30 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
     }
 }
 
-# Copy all source files to the target
+# Copy all source files to the target, set the WIM file path
 Write-Host "Copying Windows image..."
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
+$wimFilePath = "$target\tiny11\sources\install.wim"
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 
 # Show the image info and ask the user to pick the desired index
 Write-Host "`nGetting image information:"
-dism /English /Get-WimInfo "/wimfile:$target\tiny11\sources\install.wim"
+dism /English /Get-WimInfo "/wimfile:$wimFilePath"
 $index = Read-Host "`nEnter the image index"
 
 # Mount the desired image and index
 Write-Host "`nMounting Windows image. This may take a while."
-$wimFilePath = "$target\tiny11\sources\install.wim"
 & takeown /F "$wimFilePath"
 & icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
 try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
+
+# Actually make the files available in the scratch directory
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
-dism /English /mount-image "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
+dism /English /mount-image "/imagefile:$wimFilePath" "/index:$index" "/mountdir:$target\scratchdir"
 
 # Determine the architecture
-$imageInfo = dism /English /Get-WimInfo "/wimFile:$target\tiny11\sources\install.wim" "/index:$index"
+$imageInfo = dism /English /Get-WimInfo "/wimFile:$wimFilePath" "/index:$index"
 $lines = $imageInfo -split '\r?\n'
 foreach ($line in $lines) {
     if ($line -like '*Architecture : *') {
@@ -352,8 +354,8 @@ Write-Host ' '
 Write-Host "Unmounting image..."
 & dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
 Write-Host "Exporting image..."
-& dism /English '/Export-Image' "/SourceImageFile:$target\tiny11\sources\install.wim" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
-Remove-Item -Path "$target\tiny11\sources\install.wim" -Force > $null
+& dism /English '/Export-Image' "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
+Remove-Item -Path "$wimFilePath" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Write-Host "Windows image completed. Continuing with boot.wim."
 Start-Sleep -Seconds 2
