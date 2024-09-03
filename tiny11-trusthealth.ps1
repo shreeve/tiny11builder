@@ -50,10 +50,10 @@ New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" > $null
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
         Write-Host "Found install.esd, converting to install.wim..."
-        &  'dism' '/English' "/Get-WimInfo" "/wimfile:$source\sources\install.esd"
+        dism /English /Get-WimInfo "/wimfile:$source\sources\install.esd"
         $index = Read-Host "Enter the image index"
         Write-Host '`nConverting install.esd to install.wim. This may take a while...'
-        & 'DISM' /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$target\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
+        dism /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$target\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
 
         # Remove the install.esd file
         Set-ItemProperty -Path "$target\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
@@ -80,7 +80,7 @@ $index = Read-Host "`nEnter the image index"
 Write-Host "`nMounting Windows image. This may take a while."
 $wimFilePath = "$target\tiny11\sources\install.wim"
 & takeown /F "$wimFilePath"
-& icacls "$wimFilePath" "/grant" "$($adminGroup.Value):(F)"
+& icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
 try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
 dism /English /mount-image "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
@@ -118,7 +118,7 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    & 'dism' '/English' "/image:$target\scratchdir" '/Remove-ProvisionedAppxPackage' "/PackageName:$package"
+    & dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package"
 }
 
 
@@ -346,13 +346,13 @@ reg unload HKLM\zSCHEMA > $null
 reg unload HKLM\zSOFTWARE
 reg unload HKLM\zSYSTEM > $null
 Write-Host "Cleaning up image..."
-& 'dism' '/English' "/image:$target\scratchdir" '/Cleanup-Image' '/StartComponentCleanup' '/ResetBase' > $null
+& dism /English "/image:$target\scratchdir" '/Cleanup-Image' '/StartComponentCleanup' '/ResetBase' > $null
 Write-Host "Cleanup complete."
 Write-Host ' '
 Write-Host "Unmounting image..."
-& 'dism' '/English' '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+& dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
 Write-Host "Exporting image..."
-& 'dism' '/English' '/Export-Image' "/SourceImageFile:$target\tiny11\sources\install.wim" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
+& dism /English '/Export-Image' "/SourceImageFile:$target\tiny11\sources\install.wim" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" '/compress:recovery'
 Remove-Item -Path "$target\tiny11\sources\install.wim" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Write-Host "Windows image completed. Continuing with boot.wim."
@@ -362,7 +362,7 @@ $wimFilePath = "$target\tiny11\sources\boot.wim"
 & takeown "/F" $wimFilePath > $null
 & icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
 Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false
-& 'dism' '/English' '/mount-image' "/imagefile:$target\tiny11\sources\boot.wim" '/index:2' "/mountdir:$target\scratchdir"
+& dism /English '/mount-image' "/imagefile:$target\tiny11\sources\boot.wim" '/index:2' "/mountdir:$target\scratchdir"
 Write-Host "Loading registry..."
 reg load HKLM\zCOMPONENTS $target\scratchdir\Windows\System32\config\COMPONENTS
 reg load HKLM\zDEFAULT $target\scratchdir\Windows\System32\config\default
@@ -392,7 +392,7 @@ $regKey.Close()
 reg unload HKLM\zSOFTWARE
 reg unload HKLM\zSYSTEM > $null
 Write-Host "Unmounting image..."
-& 'dism' '/English' '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
+& dism /English '/unmount-image' "/mountdir:$target\scratchdir" '/commit'
 Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
 Write-Host "Copying unattended file for bypassing MS account on OOBE..."
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
