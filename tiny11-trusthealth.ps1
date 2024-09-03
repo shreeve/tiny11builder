@@ -64,13 +64,16 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
     }
 }
 
+# Copy all source files to the target
 Write-Host "Copying Windows image..."
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
+
+# Display image contents and ask user to select the desired index
 Write-Host "Getting image information:"
 &  'dism' '/English' "/Get-WimInfo" "/wimfile:$target\tiny11\sources\install.wim"
-$index = Read-Host "Please enter the image index"
+$index = Read-Host "`nPlease enter the image index"
 Write-Host "Mounting Windows image. This may take a while."
 $wimFilePath = "$($env:SystemDrive)\tiny11\sources\install.wim"
 & takeown "/F" $wimFilePath
