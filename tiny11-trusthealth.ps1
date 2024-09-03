@@ -46,15 +46,18 @@ Write-Host
 $target = $env:SystemDrive
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" > $null
 
-# Extract compressed image if needed
+# If needed, extract the WIM file from the highly compressed ESD file
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
         Write-Host "Found install.esd, converting to install.wim..."
         &  'dism' '/English' "/Get-WimInfo" "/wimfile:$source\sources\install.esd"
         $index = Read-Host "Please enter the image index"
-        Write-Host ' '
-        Write-Host 'Converting install.esd to install.wim. This may take a while...'
+        Write-Host '`nConverting install.esd to install.wim. This may take a while...'
         & 'DISM' /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$target\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
+
+        # Remove the install.esd file
+        Set-ItemProperty -Path "$target\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
+        Remove-Item "$target\tiny11\sources\install.esd" > $null 2>&1
     } else {
         Write-Host "Can't find Windows OS Installation files in the specified Drive Letter.."
         Write-Host "Please enter the correct DVD Drive Letter.."
@@ -64,8 +67,6 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
 
 Write-Host "Copying Windows image..."
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
-Set-ItemProperty -Path "$target\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
-Remove-Item "$target\tiny11\sources\install.esd" > $null 2>&1
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 Clear-Host
