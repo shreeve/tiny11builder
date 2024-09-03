@@ -188,8 +188,6 @@ Write-Host "`n==[ Removing OneDrive ]===========================================
 & takeown      /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
 & icacls          "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\OneDriveSetup.exe" -Force > $null
-Write-Host "Removal complete!"
-Start-Sleep -Seconds 2
 
 Write-Host "`n==[ Loading registry ]=========================================================="
 
