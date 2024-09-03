@@ -50,10 +50,10 @@ $wimFilePath = "$target\tiny11\sources\install.wim"
 # If needed, extract the WIM file from the highly compressed ESD file
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
-        Write-Host "Found install.esd, converting to install.wim..."
+        Write-Host "Found install.esd, converting to install.wim"
         dism /English /Get-WimInfo "/wimfile:$source\sources\install.esd"
         $index = Read-Host "Enter the image index"
-        Write-Host '`nConverting install.esd to install.wim. This may take a while...'
+        Write-Host '`nConverting install.esd to install.wim. This may take a while.'
         dism /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$wimFilePath" /Compress:max /CheckIntegrity
 
         # Remove the install.esd file
@@ -78,8 +78,8 @@ $index = Read-Host "`nEnter the image index"
 
 # Mount the desired image and index
 Write-Host "`nMounting Windows image. This may take a while."
-& takeown /F "$wimFilePath"
-& icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
+& takeown /F "$wimFilePath" > $null
+& icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)" > $null
 try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
 
 # Actually make the files available in the scratch directory
@@ -141,8 +141,8 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package" /Quiet
     Write-Host "- $package"
+    dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package" /Quiet
 }
 
 Write-Host "`n==[ Loading registry ]==========================================================`n"
@@ -189,10 +189,10 @@ reg delete "HKLM\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstal
 Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
 
 takeown /f "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /R /D Y > $null
-icacls     "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /grant "$($adminGroup.Value):(F)" /T
+icacls     "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /grant "$($adminGroup.Value):(F)" /T > $null
 
 takeown /f "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /R /D Y > $null
-icacls     "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /grant "$($adminGroup.Value):(F)" /T
+icacls     "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /grant "$($adminGroup.Value):(F)" /T > $null
 
 takeown /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
 icacls     "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
