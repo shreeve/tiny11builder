@@ -97,12 +97,12 @@ foreach ($line in $lines) {
         if ($architecture -eq 'x64') {
             $architecture = 'amd64'
         }
-        Write-Host "Architecture: $architecture"
+        Write-Host "`nArchitecture: $architecture"
         break
     }
 }
 if (-not $architecture) {
-    Write-Host "Architecture information not found."
+    Write-Host "`nArchitecture information not found."
 }
 
 Write-Host "Mounting complete! Performing removal of applications..."
