@@ -443,6 +443,6 @@ Remove-Item -Path "$target\tiny11" -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir" -Recurse -Force > $null
 
 # Stop the transcript
-Stop-Transcript
+try { Stop-Transcript } catch { }
 
 exit
