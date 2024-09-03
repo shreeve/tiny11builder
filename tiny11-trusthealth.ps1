@@ -69,7 +69,7 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
 # Copy all source files to the target, set the WIM file path
 Write-Host "Copying Windows image"
 Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $null
-Write-Host "Copy complete!"
+Write-Host "Done"
 Start-Sleep -Seconds 2
 
 # Show the image info and ask the user to pick the desired index
@@ -142,18 +142,17 @@ $packagesToRemove = $packages | Where-Object {
     $packagePrefixes -contains ($packagePrefixes | Where-Object { $packageName -like "$_*" })
 }
 foreach ($package in $packagesToRemove) {
-    Write-Host "`nRemoving: $package"
-    & dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package"
+    Write-Host "Removing: $package"
+    dism /English "/image:$target\scratchdir" /Remove-ProvisionedAppxPackage "/PackageName:$package" /Quiet
 }
 
 Write-Host "`n==[ Removing Edge ]============================================================="
 
-Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge" -Recurse -Force > $null
+Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge"       -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force > $null
-Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeCore" -Recurse -Force > $null
+Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeCore"   -Recurse -Force > $null
 if ($architecture -eq 'amd64') {
     $folderPath = Get-ChildItem -Path "$target\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
-
     if ($folderPath) {
         & 'takeown' '/f' $folderPath '/r' > $null
         & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null
@@ -163,7 +162,6 @@ if ($architecture -eq 'amd64') {
     }
 } elseif ($architecture -eq 'arm64') {
     $folderPath = Get-ChildItem -Path "$target\scratchdir\Windows\WinSxS" -Filter "arm64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName > $null
-
     if ($folderPath) {
         & 'takeown' '/f' $folderPath '/r'> $null
         & icacls $folderPath  "/grant" "$($adminGroup.Value):(F)" '/T' '/C' > $null
@@ -177,11 +175,6 @@ if ($architecture -eq 'amd64') {
 & 'takeown' '/f' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null
 & 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" '/T' '/C' > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force > $null
-
-# # Nuke our work
-# dism /English /unmount-image "/mountdir:c:\scratchdir" /discard
-# Remove-Item -Path "C:\scratchdir" -Recurse -Force
-# Remove-Item -Path "C:\tiny11" -Recurse -Force
 
 Write-Host "`n==[ Removing OneDrive ]========================================================="
 
