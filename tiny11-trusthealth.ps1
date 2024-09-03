@@ -214,26 +214,26 @@ reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v Al
 
 Write-Host "`n==[ Disabling sponsored applications ]=========================================="
 
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v ContentDeliveryAllowed             /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v FeatureManagementEnabled           /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v OemPreInstalledAppsEnabled         /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEnabled            /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEverEnabled        /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SilentInstalledAppsEnabled         /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SoftLandingEnabled                 /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-310093Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338388Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338389Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338393Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353694Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353696Enabled    /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContentEnabled           /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SystemPaneSuggestionsEnabled       /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zSOFTWARE\Policies\Microsoft\MRT"                                         /v DontOfferThroughWUAU               /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zSOFTWARE\Policies\Microsoft\PushToInstall"                               /v DisablePushToInstall               /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableCloudOptimizedContent       /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableConsumerAccountStateContent /t REG_DWORD /d  /f > $null
-reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableWindowsConsumerFeatures     /t REG_DWORD /d  /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v ContentDeliveryAllowed             /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v FeatureManagementEnabled           /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v OemPreInstalledAppsEnabled         /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEnabled            /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v PreInstalledAppsEverEnabled        /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SilentInstalledAppsEnabled         /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SoftLandingEnabled                 /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-310093Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338388Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338389Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-338393Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353694Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContent-353696Enabled    /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SubscribedContentEnabled           /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SystemPaneSuggestionsEnabled       /t REG_DWORD /d 0 /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\MRT"                                         /v DontOfferThroughWUAU               /t REG_DWORD /d 1 /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\PushToInstall"                               /v DisablePushToInstall               /t REG_DWORD /d 1 /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableCloudOptimizedContent       /t REG_DWORD /d 1 /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableConsumerAccountStateContent /t REG_DWORD /d 1 /f > $null
+reg add    "HKLM\zSOFTWARE\Policies\Microsoft\Windows\CloudContent"                        /v DisableWindowsConsumerFeatures     /t REG_DWORD /d 1 /f > $null
 reg add    "HKLM\zSOFTWARE\Microsoft\PolicyManager\current\device\Start"                   /v ConfigureStartPins                 /t REG_SZ    /d '{"pinnedList": [{}]}' /f > $null
 reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\Subscriptions" /f > $null
 reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager\SuggestedApps" /f > $null
