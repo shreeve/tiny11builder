@@ -53,7 +53,7 @@ if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\so
         dism /English /Get-WimInfo "/wimfile:$source\sources\install.esd"
         $index = Read-Host "Enter the image index"
         Write-Host '`nConverting install.esd to install.wim. This may take a while...'
-        dism /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$target\tiny11\sources\install.wim" /Compress:max /CheckIntegrity
+        dism /Export-Image /SourceImageFile:"$source\sources\install.esd" /SourceIndex:$index /DestinationImageFile:"$wimFilePath" /Compress:max /CheckIntegrity
 
         # Remove the install.esd file
         Set-ItemProperty -Path "$target\tiny11\sources\install.esd" -Name IsReadOnly -Value $false > $null 2>&1
