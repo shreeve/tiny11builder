@@ -19,8 +19,7 @@ $adminGroup = $adminSID.Translate([System.Security.Principal.NTAccount])
 $adminRole=[System.Security.Principal.WindowsBuiltInRole]::Administrator
 $myWindowsID=[System.Security.Principal.WindowsIdentity]::GetCurrent()
 $myWindowsPrincipal=new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
-if (!$myWindowsPrincipal.IsInRole($adminRole))
-{
+if (!$myWindowsPrincipal.IsInRole($adminRole)) {
     Write-Host "Restarting Tiny11 image creator as admin in a new window, you can close this one."
     $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
     $newProcess.Verb = "runas";
@@ -31,7 +30,7 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
 
 # Prepare the window and start logging
 $Host.UI.RawUI.WindowTitle = "Tiny11 image creator"
-# Start-Transcript -Path "$PSScriptRoot\tiny11.log"
+try { Start-Transcript -Path "$PSScriptRoot\tiny11.log" } catch { }
 
 # Let's go...
 Clear-Host
@@ -78,8 +77,8 @@ $index = Read-Host "`nEnter the image index"
 
 # Mount the desired image and index
 Write-Host "`nMounting Windows image. This may take a while."
-& takeown /F "$wimFilePath" > $null
-& icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)" > $null
+takeown /F "$wimFilePath" > $null
+icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)" > $null
 try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
 
 # Actually make the files available in the scratch directory
@@ -179,8 +178,8 @@ if ($architecture -eq 'amd64') {
 } else {
     Write-Host "Unknown architecture: $architecture"
 }
-& takeown /f "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/r' > $null
-& 'icacls' "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" '/grant' "$($adminGroup.Value):(F)" /T /C > $null
+takeown /f "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" /r > $null
+icacls "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" /grant "$($adminGroup.Value):(F)" /T /C > $null
 Remove-Item -Path "$target\scratchdir\Windows\System32\Microsoft-Edge-Webview" -Recurse -Force > $null
 
 reg delete "HKLM\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge"        /f > $null
