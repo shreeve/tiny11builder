@@ -70,18 +70,20 @@ Copy-Item -Path "$source\*" -Destination "$target\tiny11" -Recurse -Force > $nul
 Write-Host "Copy complete!"
 Start-Sleep -Seconds 2
 
-# Display image contents and ask user to select the desired index
-Write-Host "Getting image information:"
-&  'dism' '/English' "/Get-WimInfo" "/wimfile:$target\tiny11\sources\install.wim"
-$index = Read-Host "`nPlease enter the image index"
-Write-Host "Mounting Windows image. This may take a while."
-$wimFilePath = "$target\tiny11\sources\install.wim"
-& takeown "/F" $wimFilePath
-& icacls $wimFilePath "/grant" "$($adminGroup.Value):(F)"
-try { Set-ItemProperty -Path $wimFilePath -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
-New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
+# Show the image info and ask the user to pick the desired index
+Write-Host "`nGetting image information:"
+dism /English /Get-WimInfo "/wimfile:$target\tiny11\sources\install.wim"
+$index = Read-Host "`nEnter the image index"
 
-& dism /English "/mount-image" "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
+# Mount the desired image and index
+Write-Host "`nMounting Windows image. This may take a while."
+$wimFilePath = "$target\tiny11\sources\install.wim"
+& takeown /F "$wimFilePath"
+& icacls "$wimFilePath" "/grant" "$($adminGroup.Value):(F)"
+try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -ErrorAction Stop } catch { }
+New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
+dism /English /mount-image "/imagefile:$target\tiny11\sources\install.wim" "/index:$index" "/mountdir:$target\scratchdir"
+
 $imageIntl = & dism /English /Get-Intl "/Image:$target\scratchdir"
 $languageLine = $imageIntl -split '\n' | Where-Object { $_ -match 'Default system UI language : ([a-zA-Z]{2}-[a-zA-Z]{2})' }
 
