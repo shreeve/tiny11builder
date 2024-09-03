@@ -37,6 +37,7 @@ Clear-Host
 Write-Host "Welcome to the tiny11 image creator! Release: 05-06-24"
 
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
+# Determine the source
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
 $source = $source + ":"
 
@@ -44,6 +45,7 @@ $source = $source + ":"
 $target = $env:SystemDrive
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
 
+# Extract compressed image if needed
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
         Write-Host "Found install.esd, converting to install.wim..."
