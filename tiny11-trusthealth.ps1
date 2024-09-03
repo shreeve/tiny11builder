@@ -29,12 +29,6 @@ if (!$myWindowsPrincipal.IsInRole($adminRole))
     exit
 }
 
-
-param ($target)
-if ($Null -eq $target) {
-    $target = $env:SystemDrive
-}
-
 # Start the transcript and prepare the window
 Start-Transcript -Path "$PSScriptRoot\tiny11.log"
 
@@ -46,6 +40,10 @@ $hostArchitecture = $Env:PROCESSOR_ARCHITECTURE
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
 $source = Read-Host "Please enter the drive letter for the Windows 11 image"
 $source = $source + ":"
+
+# Determine the target
+$target = $env:SystemDrive
+New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" >null
 
 if ((Test-Path "$source\sources\boot.wim") -eq $false -or (Test-Path "$source\sources\install.wim") -eq $false) {
     if ((Test-Path "$source\sources\install.esd") -eq $true) {
