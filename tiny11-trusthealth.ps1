@@ -43,6 +43,18 @@ $source = Read-Host "Enter the drive letter for the Windows 11 image"
 $source = $source + ":"
 Write-Host
 
+# Perform eager download of ISO creation utility, so we don't fail at nearly the last step
+$osc = "$PSScriptRoot\oscdimg.exe"
+$url = "https://msdl.microsoft.com/download/symbols/oscdimg.exe/3D44737265000/oscdimg.exe"
+if (-not (Test-Path -Path $osc)) {
+    Write-Host "Downloading oscdimg.exe"
+    Invoke-WebRequest -Uri $url -OutFile $osc
+    if (!Test-Path $osc) {
+        Write-Error "Failed to download oscdimg.exe."
+        exit 1
+    }
+}
+
 # Determine the target and the WIM file path
 $target = $env:SystemDrive
 New-Item -ItemType Directory -Force -Path "$target\tiny11\sources" > $null
@@ -473,28 +485,8 @@ dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit
 
 Write-Host "`n==[ Tiny11 image creation is now complete, will now generate an ISO ]===========`n"
 
-Write-Host "`nCopying unattended file for bypassing MS account on OOBE..."
-
-Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
-
-Write-Host "Creating ISO image..."
-
-$url = "https://msdl.microsoft.com/download/symbols/oscdimg.exe/3D44737265000/oscdimg.exe"
-
-$oscdimg = "$PSScriptRoot\oscdimg.exe"
-
-if (-not (Test-Path -Path $oscdimg)) {
-    Write-Host "Downloading oscdimg.exe..."
-    Invoke-WebRequest -Uri $url -OutFile $oscdimg
-    if (Test-Path $oscdimg) {
-        Write-Host "oscdimg.exe downloaded successfully."
-    } else {
-        Write-Error "Failed to download oscdimg.exe."
-        exit 1 # NOTE: Pretty much sucks to die this late in the game... push this up above?
-    }
-}
-
-& "$oscdimg" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
+Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force # > $null
+& "$osc" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
 
 Write-Host "`n==[ Tiny11 is now complete ]====================================================`n"
 
