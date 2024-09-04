@@ -362,9 +362,10 @@ function Enable-Privilege {
     $type[0]::EnablePrivilege($processHandle, $Privilege, $Disable)
 }
 
-Enable-Privilege SeTakeOwnershipPrivilege
+Enable-Privilege SeTakeOwnershipPrivilege > $null
 
 Write-Host "`n==[ Updating registry key permissions ]=========================================`n"
+Write-Host
 
 $regKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::TakeOwnership)
 $regACL = $regKey.GetAccessControl()
@@ -416,19 +417,17 @@ Write-Host "`n==[ Unloading registry ]==========================================
   reg unload "HKLM\zSOFTWARE"   > $null
   reg unload "HKLM\zSYSTEM"     > $null
 
-Write-Host "`n==[ Cleaning up image ]=========================================================`n"
+Write-Host "`n==[ Exporting install image ]===================================================`n"
 
 dism /English "/image:$target\scratchdir" /Cleanup-Image /StartComponentCleanup /ResetBase > $null
 dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit # NOTE: /discard if you want to ignore your work
-
-Write-Host "Exporting image..."
-dism /English /Export-Image "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" /compress:recovery # Creates 'install.esd' if recovery!
+dism /English /Export-Image "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" /compress:recovery # (max=.wim file, recovery=.esd)
 Remove-Item -Path "$wimFilePath" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
-Write-Host "Windows image completed. Continuing with boot.wim."
 Start-Sleep -Seconds 2
 
-Write-Host "Mounting boot image:"
+Write-Host "`n==[ Processing boot image ]=====================================================`n"
+
 $wimFilePath = "$target\tiny11\sources\boot.wim"
 takeown /F "$wimFilePath" > $null
 icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
@@ -476,8 +475,9 @@ Write-Host "Unmounting image..."
 
 dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit
 
-Write-Host "The tiny11 image is now completed. Proceeding with the making of the ISO..."
-Write-Host "Copying unattended file for bypassing MS account on OOBE..."
+Write-Host "`n==[ Tiny11 image creation is now complete, will now generate an ISO ]===========`n"
+
+Write-Host "`nCopying unattended file for bypassing MS account on OOBE..."
 
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
 
@@ -513,13 +513,11 @@ if ([System.IO.Directory]::Exists($ADKDepTools)) {
 
 & "$OSCDIMG" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
 
-# Finishing up (directories will exist until user presses Enter)
-Write-Host "Creation completed! Press any key to exit the script..."
-Read-Host "Press Enter to continue"
+Write-Host "`n==[ Tiny11 is now complete ]====================================================`n"
 
-Write-Host "Performing Cleanup..."
+Read-Host "`nPress Enter to clean up temporary files and exit"
+
 Remove-Item -Path "$target\scratchdir" -Recurse -Force > $null
 Remove-Item -Path "$target\tiny11"     -Recurse -Force > $null
 
-# Stop the transcript
 try { Stop-Transcript } catch { }
