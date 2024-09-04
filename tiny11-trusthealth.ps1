@@ -443,18 +443,20 @@ Write-Host "`n==[ Processing boot image ]=======================================
 $wimFilePath = "$target\tiny11\sources\boot.wim"
 takeown /F "$wimFilePath" > $null
 icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
+
 Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false
+
+Write-Host "Mounting boot image"
+
 dism /English /Mount-Image "/imagefile:$target\tiny11\sources\boot.wim" /index:2 "/mountdir:$target\scratchdir"
 
-Write-Host "Loading registry..."
+Write-Host "Loading boot image registry"
 
 reg load "HKLM\zCOMPONENTS" "$target\scratchdir\Windows\System32\config\COMPONENTS"
 reg load "HKLM\zDEFAULT"    "$target\scratchdir\Windows\System32\config\default"
 reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"
 reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"
 reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"
-
-Write-Host "Bypassing system requirements(on the setup image):"
 
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
@@ -466,10 +468,10 @@ reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v By
 reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
 reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
 reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
+Write-Host "Bypassing boot image requirements"
 
-Write-Host "Tweaking complete!"
 
-Write-Host "Unmounting Registry..."
+Write-Host "Unloading boot image registry"
 
 reg unload "HKLM\zCOMPONENTS" > $null
 reg unload "HKLM\zDRIVERS"    > $null
@@ -479,7 +481,7 @@ reg unload "HKLM\zSCHEMA"     > $null
 reg unload "HKLM\zSOFTWARE"   > $null
 reg unload "HKLM\zSYSTEM"     > $null
 
-Write-Host "Unmounting image..."
+Write-Host "Unmounting boot image"
 
 dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit
 
