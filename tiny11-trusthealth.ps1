@@ -479,35 +479,22 @@ Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\au
 
 Write-Host "Creating ISO image..."
 
-$ADKDepTools = "C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\Deployment Tools\$env:PROCESSOR_ARCHITECTURE\Oscdimg"
-$localOSCDIMGPath = "$PSScriptRoot\oscdimg.exe"
+$url = "https://msdl.microsoft.com/download/symbols/oscdimg.exe/3D44737265000/oscdimg.exe"
 
-if ([System.IO.Directory]::Exists($ADKDepTools)) {
-    Write-Host "Will be using oscdimg.exe from system ADK."
-    $OSCDIMG = "$ADKDepTools\oscdimg.exe"
-} else {
-    Write-Host "ADK folder not found. Will be using bundled oscdimg.exe."
+$oscdimg = "$PSScriptRoot\oscdimg.exe"
 
-    $url = "https://msdl.microsoft.com/download/symbols/oscdimg.exe/3D44737265000/oscdimg.exe"
-
-    if (-not (Test-Path -Path $localOSCDIMGPath)) {
-        Write-Host "Downloading oscdimg.exe..."
-        Invoke-WebRequest -Uri $url -OutFile $localOSCDIMGPath
-
-        if (Test-Path $localOSCDIMGPath) {
-            Write-Host "oscdimg.exe downloaded successfully."
-        } else {
-            Write-Error "Failed to download oscdimg.exe."
-            exit 1
-        }
+if (-not (Test-Path -Path $oscdimg)) {
+    Write-Host "Downloading oscdimg.exe..."
+    Invoke-WebRequest -Uri $url -OutFile $oscdimg
+    if (Test-Path $oscdimg) {
+        Write-Host "oscdimg.exe downloaded successfully."
     } else {
-        Write-Host "oscdimg.exe already exists locally."
+        Write-Error "Failed to download oscdimg.exe."
+        exit 1 # NOTE: Pretty much sucks to die this late in the game... push this up above?
     }
-
-    $OSCDIMG = $localOSCDIMGPath
 }
 
-& "$OSCDIMG" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
+& "$oscdimg" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
 
 Write-Host "`n==[ Tiny11 is now complete ]====================================================`n"
 
