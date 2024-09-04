@@ -256,6 +256,7 @@ reg delete "HKLM\zNTUSER\Software\Microsoft\Windows\CurrentVersion\ContentDelive
 Write-Host "`n==[ Enabling local accounts on OOBE (out of box experience) ]===================`n"
 
 reg add "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f > $null
+
 Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\scratchdir\Windows\System32\Sysprep\autounattend.xml" -Force > $null
 
 Write-Host "`n==[ Disabling reserved storage ]================================================`n"
@@ -377,7 +378,6 @@ function Enable-Privilege {
 Enable-Privilege SeTakeOwnershipPrivilege > $null
 
 Write-Host "`n==[ Updating registry key permissions ]=========================================`n"
-Write-Host
 
 $regKey = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey("zSOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache\Tasks",[Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree,[System.Security.AccessControl.RegistryRights]::TakeOwnership)
 $regACL = $regKey.GetAccessControl()
@@ -432,8 +432,9 @@ Write-Host "`n==[ Unloading registry ]==========================================
 Write-Host "`n==[ Exporting install image, this will take a long time ]=======================`n"
 
 dism /English "/image:$target\scratchdir" /Cleanup-Image /StartComponentCleanup /ResetBase > $null
-dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit # NOTE: /discard if you want to ignore your work
+dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit > $null
 dism /English /Export-Image "/SourceImageFile:$wimFilePath" "/SourceIndex:$index" "/DestinationImageFile:$target\tiny11\sources\install2.wim" /compress:recovery # (max=.wim file, recovery=.esd)
+
 Remove-Item -Path "$wimFilePath" -Force > $null
 Rename-Item -Path "$target\tiny11\sources\install2.wim" -NewName "install.wim" > $null
 Start-Sleep -Seconds 2
@@ -441,6 +442,7 @@ Start-Sleep -Seconds 2
 Write-Host "`n==[ Processing boot image ]=====================================================`n"
 
 $wimFilePath = "$target\tiny11\sources\boot.wim"
+
 takeown /F "$wimFilePath" > $null
 icacls "$wimFilePath" /grant "$($adminGroup.Value):(F)"
 
@@ -458,6 +460,8 @@ reg load "HKLM\zNTUSER"     "$target\scratchdir\Users\Default\ntuser.dat"
 reg load "HKLM\zSOFTWARE"   "$target\scratchdir\Windows\System32\config\SOFTWARE"
 reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"
 
+Write-Host "Bypassing boot image requirements"
+
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
 reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
 reg add "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV1                                  /t REG_DWORD /d 0 /f > $null
@@ -468,8 +472,6 @@ reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v By
 reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
 reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
 reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
-Write-Host "Bypassing boot image requirements"
-
 
 Write-Host "Unloading boot image registry"
 
@@ -487,7 +489,8 @@ dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit
 
 Write-Host "`n==[ Tiny11 image creation is now complete, will now generate an ISO ]===========`n"
 
-Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force # > $null
+Copy-Item -Path "$PSScriptRoot\autounattend.xml" -Destination "$target\tiny11\autounattend.xml" -Force > $null
+
 & "$osc" -m -o -u2 -udfver102 "-bootdata:2#p0,e,b$target\tiny11\boot\etfsboot.com#pEF,e,b$target\tiny11\efi\microsoft\boot\efisys.bin" "$target\tiny11" "$PSScriptRoot\tiny11.iso"
 
 Write-Host "`n==[ Tiny11 is now complete ]====================================================`n"
