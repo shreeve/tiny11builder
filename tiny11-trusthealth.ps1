@@ -429,7 +429,7 @@ Write-Host "`n==[ Unloading registry ]==========================================
   reg unload "HKLM\zSOFTWARE"   > $null
   reg unload "HKLM\zSYSTEM"     > $null
 
-Write-Host "`n==[ Exporting install image ]===================================================`n"
+Write-Host "`n==[ Exporting install image, this will take a long time ]=======================`n"
 
 dism /English "/image:$target\scratchdir" /Cleanup-Image /StartComponentCleanup /ResetBase > $null
 dism /English /Unmount-Image "/mountdir:$target\scratchdir" /commit # NOTE: /discard if you want to ignore your work
