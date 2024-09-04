@@ -444,16 +444,16 @@ reg load "HKLM\zSYSTEM"     "$target\scratchdir\Windows\System32\config\SYSTEM"
 
 Write-Host "Bypassing system requirements(on the setup image):"
 
-reg "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
-reg "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
-reg "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV1                                  /t REG_DWORD /d 0 /f > $null
-reg "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV2                                  /t REG_DWORD /d 0 /f > $null
-reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassCPUCheck                       /t REG_DWORD /d 1 /f > $null
-reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassRAMCheck                       /t REG_DWORD /d 1 /f > $null
-reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassSecureBootCheck                /t REG_DWORD /d 1 /f > $null
-reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
-reg "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
-reg "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zDEFAULT\Control Panel\UnsupportedHardwareNotificationCache" /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV1                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zNTUSER\Control Panel\UnsupportedHardwareNotificationCache"  /v SV2                                  /t REG_DWORD /d 0 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassCPUCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassRAMCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassSecureBootCheck                /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassStorageCheck                   /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\LabConfig"                                     /v BypassTPMCheck                       /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSYSTEM\Setup\MoSetup"                                       /v AllowUpgradesWithUnsupportedTPMOrCPU /t REG_DWORD /d 1 /f > $null
 
 Write-Host "Tweaking complete!"
 
