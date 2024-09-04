@@ -459,8 +459,6 @@ Write-Host "Tweaking complete!"
 
 Write-Host "Unmounting Registry..."
 
-$regKey.Close() # Why this???
-
 reg unload "HKLM\zCOMPONENTS" > $null
 reg unload "HKLM\zDRIVERS"    > $null
 reg unload "HKLM\zDEFAULT"    > $null
@@ -468,8 +466,6 @@ reg unload "HKLM\zNTUSER"     > $null
 reg unload "HKLM\zSCHEMA"     > $null
 reg unload "HKLM\zSOFTWARE"   > $null
 reg unload "HKLM\zSYSTEM"     > $null
-
-$regKey.Close() # Why this???
 
 Write-Host "Unmounting image..."
 
