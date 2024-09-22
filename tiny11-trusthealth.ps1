@@ -99,6 +99,12 @@ try { Set-ItemProperty -Path "$wimFilePath" -Name IsReadOnly -Value $false -Erro
 New-Item -ItemType Directory -Force -Path "$target\scratchdir" > $null
 dism /English /mount-image "/imagefile:$wimFilePath" "/index:$index" "/mountdir:$target\scratchdir"
 
+# Adjust permissions of RtBackup and WebThreatDefSvc
+takeown /f "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /R /D Y > $null
+takeown /f "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /R /D Y > $null
+icacls     "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /grant "$($adminGroup.Value):(F)" /T > $null
+icacls     "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /grant "$($adminGroup.Value):(F)" /T > $null
+
 # Determine the architecture
 $imageInfo = dism /English /Get-WimInfo "/wimFile:$wimFilePath" "/index:$index"
 $lines = $imageInfo -split '\r?\n'
@@ -171,6 +177,7 @@ Write-Host "`n==[ Removing Edge ]===============================================
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\Edge"       -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeUpdate" -Recurse -Force > $null
 Remove-Item -Path "$target\scratchdir\Program Files (x86)\Microsoft\EdgeCore"   -Recurse -Force > $null
+
 if ($architecture -eq 'amd64') {
     $folderPath = Get-ChildItem -Path "$target\scratchdir\Windows\WinSxS" -Filter "amd64_microsoft-edge-webview_31bf3856ad364e35*" -Directory | Select-Object -ExpandProperty FullName
     if ($folderPath) {
@@ -200,12 +207,6 @@ reg delete "HKLM\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstal
 reg delete "HKLM\zSOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Edge Update" /f > $null
 
 Write-Host "`n==[ Removing OneDrive ]=========================================================`n"
-
-takeown /f "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /R /D Y > $null
-icacls     "$target\scratchdir\Windows\System32\LogFiles\WMI\RtBackup" /grant "$($adminGroup.Value):(F)" /T > $null
-
-takeown /f "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /R /D Y > $null
-icacls     "$target\scratchdir\Windows\System32\WebThreatDefSvc"       /grant "$($adminGroup.Value):(F)" /T > $null
 
 takeown /f "$target\scratchdir\Windows\System32\OneDriveSetup.exe" > $null
 icacls     "$target\scratchdir\Windows\System32\OneDriveSetup.exe" /grant "$($adminGroup.Value):(F)" /T /C > $null
@@ -265,8 +266,11 @@ reg add "HKLM\zSOFTWARE\Microsoft\Windows\CurrentVersion\ReserveManager" /v Ship
 
 Write-Host "`n==[ Disabling chat icon ]=======================================================`n"
 
-reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat"                   /v ChatIcon  /t REG_DWORD /d 3 /f > $null
-reg add "HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarMn /t REG_DWORD /d 0 /f > $null
+#reg add "HKCU\Software\Policies\Microsoft\Windows\Explorer" /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f
+
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Explorer"                       /v DisableSearchBoxSuggestions /t REG_DWORD /d 1 /f > $null
+reg add "HKLM\zSOFTWARE\Policies\Microsoft\Windows\Windows Chat"                   /v ChatIcon                    /t REG_DWORD /d 3 /f > $null
+reg add "HKLM\zNTUSER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarMn                   /t REG_DWORD /d 0 /f > $null
 
 Write-Host "`n==[ Disabling telemetry ]=====================================================`n"
 
